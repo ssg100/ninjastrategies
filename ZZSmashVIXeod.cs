@@ -16,16 +16,16 @@ using NinjaTrader.Strategy;
 namespace NinjaTrader.Strategy
 {
     /// <summary>
-    /// nanex strategy to buy at 9pm PST exit 1AM
+    /// smash vix  buy at 9pm PST exit 1AM
     /// </summary>
     [Description("nanex strategy to buy at 9pm PST exit 1AM")]
-    public class ZZOvernightES : Strategy
+    public class ZZSmashVIXeod : Strategy
     {
         #region Variables
         // Wizard generated variables
-        private int startTime = 210000; // Default setting for StartTime
-        private int endTime = 010000; //235900; // Default setting for EndTime
-        private int stopLoss = 80; // Default setting for StopLoss
+        private int startTime = 122900; // Default setting for StartTime
+        private int endTime = 125800; //235900; // Default setting for EndTime
+        private int stopLoss = 8000; // Default setting for StopLoss
 		
 		private int		priorTradesCount		= 0;
 		private double	priorTradesCumProfit	= 0;
@@ -37,9 +37,10 @@ namespace NinjaTrader.Strategy
         /// </summary>
         protected override void Initialize()
         {
-            SetTrailStop("Long", CalculationMode.Ticks, StopLoss, false);
+           // SetTrailStop("Long", CalculationMode.Ticks, StopLoss, false);
 
-            CalculateOnBarClose = true;
+            CalculateOnBarClose = false;
+			ExitOnClose = false;
         }
 
         /// <summary>
@@ -53,10 +54,9 @@ namespace NinjaTrader.Strategy
 			double open_pnl;
 
 			// Add guard, if weekly loss exceeds a $ amount, stop trading for the weekn
-			if ((Time[0].DayOfWeek == DayOfWeek.Sunday) && Bars.FirstBarOfSession && Time[0].Hour < 18 )
+			if (((Time[0].DayOfWeek == DayOfWeek.Monday) && Bars.FirstBarOfSession ) ||(Time[0].Day == 8 && Time[0].Month == 9 && Bars.FirstBarOfSession))
 			{
-				// Guard with hour < 18 because we do get 2 true conditions fired - one at 15:00 and 21:01
-				Print("Start of sunday " + Time[0]);
+				Print("Start of monday " + Time[0]);
 			
 				// Store the strategy's prior cumulated realized profit and number of trades
 				priorTradesCount = Performance.AllTrades.Count;
@@ -82,10 +82,10 @@ namespace NinjaTrader.Strategy
 				//Print("Loss= " + curr_total_pnl);
 				
 				// Exit all position if weekly loss exceeded
-				if (Position.MarketPosition == MarketPosition.Long)
+				if (Position.MarketPosition == MarketPosition.Short)
             	{
-					Print("Weekly loss exceed EXIT = " + ToTime(Time[0]));
-                	ExitLong("ExitLong", "Long");
+					Print("Weekly loss exceed EXIT = " + Time[0].Date + " " + ToTime(Time[0]));
+                	ExitShort("ExitShort", "Short");
             	}
 				
 				return;
@@ -103,18 +103,18 @@ namespace NinjaTrader.Strategy
 				)
             {
 				Print("Entry ToTime() = " + ToTime(Time[0]));
-                EnterLong(DefaultQuantity, "Long");
+                EnterShort(100, "Short");
             }
 	
             // Condition set 2
             if (
 					( time >= endTime
 						&& time <= endTime + 500 )
-                		&& Position.MarketPosition == MarketPosition.Long
+                		&& Position.MarketPosition == MarketPosition.Short
 				)
             {
 				Print("EXIT ToTime() = " + ToTime(Time[0]));
-                ExitLong("ExitLong", "Long");
+                ExitShort("ExitShort", "Short");
             }
         }
 
