@@ -25,7 +25,8 @@ namespace NinjaTrader.Strategy
         // Wizard generated variables
         private int startTime = 210000; // Default setting for StartTime
         private int endTime = 010000; //235900; // Default setting for EndTime
-        private int stopLoss = 80; // Default setting for StopLoss
+        private int stopLoss = 500; // Default setting for StopLoss
+		private int tradeSize = 1;	// # of contract
 		
 		private int		priorTradesCount		= 0;
 		private double	priorTradesCumProfit	= 0;
@@ -75,16 +76,19 @@ namespace NinjaTrader.Strategy
 			open_pnl = Position.GetProfitLoss(Close[0], PerformanceUnit.Currency);
 			curr_total_pnl = curr_realized_pnl + open_pnl;
 			
-			if (curr_total_pnl <= -500)
+			//Print("quantity = " + Position.Quantity);
+			
+			if (curr_total_pnl <= -stopLoss * tradeSize)
 //				|| Performance.AllTrades.Count - priorTradesCount > 10) // if want # of trade counts also
 			{
 				//Print("Weekly loss exceed!!");
-				//Print("Loss= " + curr_total_pnl);
+				
 				
 				// Exit all position if weekly loss exceeded
 				if (Position.MarketPosition == MarketPosition.Long)
             	{
 					Print("Weekly loss exceed EXIT = " + ToTime(Time[0]));
+					Print("Loss= " + curr_total_pnl);
                 	ExitLong("ExitLong", "Long");
             	}
 				
@@ -103,7 +107,7 @@ namespace NinjaTrader.Strategy
 				)
             {
 				Print("Entry ToTime() = " + ToTime(Time[0]));
-                EnterLong(DefaultQuantity, "Long");
+                EnterLong(TradeSize, "Long");
             }
 	
             // Condition set 2
@@ -114,7 +118,7 @@ namespace NinjaTrader.Strategy
 				)
             {
 				Print("EXIT ToTime() = " + ToTime(Time[0]));
-                ExitLong("ExitLong", "Long");
+                ExitLong("ExitLong", "Long");	// if quantity is not specified, then all exit
             }
         }
 
@@ -141,6 +145,14 @@ namespace NinjaTrader.Strategy
         {
             get { return stopLoss; }
             set { stopLoss = Math.Max(2, value); }
+        }
+		
+		[Description("Trade Size")]
+        [GridCategory("Parameters")]
+        public int TradeSize
+        {
+            get { return tradeSize; }
+            set { tradeSize = Math.Max(1, value); }
         }
         #endregion
     }
